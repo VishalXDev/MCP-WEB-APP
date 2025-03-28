@@ -1,8 +1,10 @@
 import { io } from "../server.js"; // Import Socket.io instance
 import PickupPartner from "../models/PickupPartner.js";
 import Notification from "../models/Notification.js"; // Ensure Notification is imported
+import { addFundsToWallet } from "../services/walletService.js"; // Imported function
 
-export const addFundsToWallet = async (req, res) => {
+// ✅ Rename the local function to avoid conflict
+export const processWalletFunding = async (req, res) => {
   try {
     const { partnerId, amount } = req.body;
 
@@ -38,5 +40,16 @@ export const addFundsToWallet = async (req, res) => {
     res.status(200).json({ message: "Funds added successfully!", walletBalance: partner.walletBalance });
   } catch (error) {
     res.status(500).json({ message: "Error adding funds", error: error.message });
+  }
+};
+
+// ✅ Use the imported function from walletService.js
+export const handleWalletFunding = async (req, res) => {
+  try {
+    const { amount } = req.body;
+    const response = await addFundsToWallet(req.user.id, amount); // Call imported function
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };
