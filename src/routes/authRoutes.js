@@ -1,6 +1,8 @@
 import express from "express";
 import { body } from "express-validator";
 import { signup, login } from "../controllers/authController.js";
+import { updateUser, deleteUser } from "../controllers/userController.js";
+import { protect } from "../middleware/authMiddleware.js"; // Protect route middleware
 
 const router = express.Router();
 
@@ -26,12 +28,11 @@ router.post(
   ],
   login
 );
-router.post(
-  "/register",
-  [
-    body("email").isEmail().withMessage("Invalid email format"),
-    body("password").isLength({ min: 8 }).withMessage("Password must be at least 8 characters"),
-  ],
-  registerUser
-);
+
+// Update user
+router.put("/update/:id", protect, updateUser);
+
+// Delete user
+router.delete("/delete/:id", protect, deleteUser);
+
 export default router;
