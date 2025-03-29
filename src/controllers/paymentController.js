@@ -32,26 +32,6 @@ export const addFundsToWallet = async (req, res) => {
   }
 };
 
-// 📌 Create Razorpay Order
-export const createOrder = async (req, res) => {
-  try {
-    const { amount } = req.body;
-    if (!amount || amount <= 0) return res.status(400).json({ message: "Invalid amount" });
-
-    const options = {
-      amount: amount * 100, // Razorpay expects amount in paise
-      currency: "INR",
-      receipt: `txn_${Date.now()}`,
-    };
-
-    const order = await razorpayInstance.orders.create(options);
-    res.json(order);
-  } catch (error) {
-    console.error("Error in createOrder:", error);
-    res.status(500).json({ message: "Payment Error", error: error.message });
-  }
-};
-
 // 📌 Verify Payment & Update Wallet
 export const verifyPayment = async (req, res) => {
   try {

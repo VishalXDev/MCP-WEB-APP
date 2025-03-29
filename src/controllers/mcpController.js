@@ -2,8 +2,8 @@ import PickupPartner from "../models/PickupPartner.js";
 import Order from "../models/Order.js";
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
-import { io } from "../server.js"; // Import Socket.io instance
 import Notification from "../models/Notification.js";
+import { io } from "../app.js"; // Ensure correct import of io
 
 // 📌 Assign an Order
 export const assignOrder = async (req, res) => {

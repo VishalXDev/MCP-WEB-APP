@@ -1,5 +1,4 @@
-import User from "../models/userModel.js";
-
+import User from "../models/User.js";  // Adjust the relative path if necessary
 // @desc Update user details
 // @route PUT /api/users/:id
 // @access Private

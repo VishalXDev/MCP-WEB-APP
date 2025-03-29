@@ -54,4 +54,9 @@ export const getSocketIO = () => {
 };
 
 // Optionally export `io` to access it directly if needed
+// In your socket setup
+socket.on("locationUpdate", ({ orderId, latitude, longitude }) => {
+  io.to(orderId).emit("locationUpdated", { latitude, longitude });
+});
+
 export { io };

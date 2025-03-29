@@ -7,19 +7,18 @@ import helmet from "helmet";
 import compression from "compression";
 import Redis from "ioredis";
 import { Server } from "socket.io";
-import connectDB from "./config/db.js";
-import { initializeSocket } from "./socket.io";
-import logger from "./logger.js";
-import apiLimiter from "./middleware/rateLimiter.js";
-import cacheMiddleware from './middleware/cacheMiddleware.js';
-import { initializeSocket } from "./socket.io/initializeSocket";  // Import socket.io setup
+import connectDB from "./src/config/db.js";
+import logger from "./src/logger.js";
+import apiLimiter from "./src/middleware/rateLimiter.js";
+import cacheMiddleware from "./src/middleware/cacheMiddleware.js";
+import { initializeSocket } from "./src/socket.io/initializeSocket.js"; // Import socket.io setup
 // Import Routes
-import authRoutes from "./routes/authRoutes.js";
-import mcpRoutes from "./routes/mcpRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
-import pickupPartnerRoutes from "./routes/pickupPartnerRoutes.js";
-import orderRoutes from "./routes/orderRoutes.js";
-import paymentRoutes from "./routes/paymentRoutes.js";
+import authRoutes from "./src/routes/authRoutes.js";
+import mcpRoutes from "./src/routes/mcpRoutes.js";
+import userRoutes from "./src/routes/userRoutes.js";
+import pickupPartnerRoutes from "./src/routes/pickupPartnerRoutes.js";
+import orderRoutes from "./src/routes/orderRoutes.js";
+import paymentRoutes from "./src/routes/paymentRoutes.js";
 
 dotenv.config(); // Load environment variables
 // Apply rate limiter to auth routes
@@ -33,7 +32,7 @@ const redis = new Redis({
   password: process.env.REDIS_PASSWORD || "",
 });
 // Use the payment routes
-app.use('/api/payments', paymentRoutes);
+app.use("/api/payments", paymentRoutes);
 // Initialize Socket.io
 const io = new Server(server, {
   cors: {
@@ -56,13 +55,6 @@ app.use((req, res, next) => {
 app.use("/api/auth", authRoutes);
 // Rate Limiting
 app.use("/api/auth", apiLimiter);
-
-// Cache Middleware
-const cacheMiddleware = async (req, res, next) => {
-  const cachedData = await redis.get(req.originalUrl);
-  if (cachedData) return res.json(JSON.parse(cachedData));
-  next();
-};
 app.use(cacheMiddleware);
 
 // Register Routes
@@ -109,22 +101,26 @@ mongoose
     console.error("MongoDB Connection Error:", error);
     process.exit(1); // Exit process on DB connection failure
   });
-  dotenv.config(); // Load environment variables from the .env file
-  dotenv.config();  // Load environment variables from .env file
+const server = http.createServer(app); // Create HTTP server using Express
 
-  const app = express();  // Initialize Express app
-  const server = http.createServer(app);  // Create HTTP server using Express
-  
-  // Initialize Socket.IO with the HTTP server
-  initializeSocket(server);
-  
-  // Connect to MongoDB and start the server
-  connectDB()
-    .then(() => {
-      const PORT = process.env.PORT || 5000;
-      server.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
-      });
-    })
-    .catch((error) => console.error("MongoDB Connection Error:", error));
+// Initialize Socket.IO with the HTTP server
+initializeSocket(server);
+
+// Connect to MongoDB and start the server
+connectDB()
+  .then(() => {
+    const PORT = process.env.PORT || 5000;
+    server.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch((error) => console.error("MongoDB Connection Error:", error));
 export { io, server };
+const app = express();
+app.use(express.json());
+
+app.use("/api/payments", paymentRoutes);
+
+app.listen(5000, () => {
+  console.log("Server running on port 5000");
+});

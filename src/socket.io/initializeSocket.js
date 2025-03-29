@@ -1,7 +1,8 @@
 // socket.io/initializeSocket.js
 
 import { Server } from "socket.io";  // Import the Socket.IO server
-import { protectSocket } from "../middleware/protectSocket";  // Import the protectSocket middleware
+import { protectSocket } from '../middleware/protectSocket.js';
+
 
 let io = null;  // Declare io variable to be initialized later
 
