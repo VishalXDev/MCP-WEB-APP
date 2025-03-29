@@ -11,7 +11,8 @@ import connectDB from "./config/db.js";
 import { initializeSocket } from "./socket.io";
 import logger from "./logger.js";
 import apiLimiter from "./middleware/rateLimiter.js";
-
+import cacheMiddleware from './middleware/cacheMiddleware.js';
+import { initializeSocket } from "./socket.io/initializeSocket";  // Import socket.io setup
 // Import Routes
 import authRoutes from "./routes/authRoutes.js";
 import mcpRoutes from "./routes/mcpRoutes.js";
@@ -21,18 +22,18 @@ import orderRoutes from "./routes/orderRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 
 dotenv.config(); // Load environment variables
-
-// Initialize Express App
-const app = express();
-const server = http.createServer(app);
-
+// Apply rate limiter to auth routes
+app.use("/api/auth", apiLimiter);
+// Apply cache middleware globally or to specific routes
+app.use(cacheMiddleware);
 // Initialize Redis
 const redis = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
+  host: process.env.REDIS_HOST || "localhost",
   port: process.env.REDIS_PORT || 6379,
-  password: process.env.REDIS_PASSWORD || '',
+  password: process.env.REDIS_PASSWORD || "",
 });
-
+// Use the payment routes
+app.use('/api/payments', paymentRoutes);
 // Initialize Socket.io
 const io = new Server(server, {
   cors: {
@@ -52,7 +53,7 @@ app.use((req, res, next) => {
   logger.info(`${req.method} ${req.url}`);
   next();
 });
-
+app.use("/api/auth", authRoutes);
 // Rate Limiting
 app.use("/api/auth", apiLimiter);
 
@@ -95,15 +96,35 @@ io.on("connection", (socket) => {
 
 // Connect to MongoDB and start server only after successful DB connection
 mongoose
-  .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => {
     server.listen(process.env.PORT || 5000, () =>
       console.log(`Server running on port ${process.env.PORT || 5000}`)
     );
   })
   .catch((error) => {
-    console.error('MongoDB Connection Error:', error);
-    process.exit(1);  // Exit process on DB connection failure
+    console.error("MongoDB Connection Error:", error);
+    process.exit(1); // Exit process on DB connection failure
   });
+  dotenv.config(); // Load environment variables from the .env file
+  dotenv.config();  // Load environment variables from .env file
 
+  const app = express();  // Initialize Express app
+  const server = http.createServer(app);  // Create HTTP server using Express
+  
+  // Initialize Socket.IO with the HTTP server
+  initializeSocket(server);
+  
+  // Connect to MongoDB and start the server
+  connectDB()
+    .then(() => {
+      const PORT = process.env.PORT || 5000;
+      server.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+      });
+    })
+    .catch((error) => console.error("MongoDB Connection Error:", error));
 export { io, server };

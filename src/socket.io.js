@@ -13,9 +13,6 @@ export const initializeSocket = (server) => {
     },
   });
 
-  // Use middleware (if any, e.g., protectSocket) here
-  io.use(protectSocket); // Assuming you have this function to protect your sockets
-
   // Handle new connections
   io.on("connection", (socket) => {
     console.log(`⚡ Client connected: ${socket.id}`);
@@ -29,6 +26,17 @@ export const initializeSocket = (server) => {
     socket.on("updateLocation", ({ orderId, lat, lng }) => {
       console.log(`Updating location for order: ${orderId}`);
       io.to(orderId).emit("locationUpdate", { lat, lng }); // Emit to the specific order room
+    });
+
+    // Join a room for a specific order (you can use this for tracking order-related events)
+    socket.on("joinOrderRoom", (orderId) => {
+      socket.join(orderId);
+      console.log(`User joined order room: ${orderId}`);
+    });
+
+    // Emit status updates to a specific room (order)
+    socket.on("orderStatusUpdate", ({ orderId, status }) => {
+      io.to(orderId).emit("orderStatusUpdated", { orderId, status });
     });
 
     socket.on("disconnect", () => {
